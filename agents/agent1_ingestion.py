@@ -27,32 +27,36 @@ def extract_transcript(url: str) -> Dict:
     # --- Primary: youtube-transcript-api ---
     try:
         from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
-        
+
         # Get video title via a lightweight request
         title = _get_video_title(video_id)
-        
-        # Fetch transcript - try English first, then any available language
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-        
-        transcript = None
+
+        ytt = YouTubeTranscriptApi()
+
+        raw = None
         try:
-            transcript = transcript_list.find_manually_created_transcript(['en'])
+            # Try English manual transcript first
+            raw = ytt.fetch(video_id, languages=['en'])
         except Exception:
             try:
-                transcript = transcript_list.find_generated_transcript(['en'])
-            except Exception:
-                # Try any available transcript and translate to English
-                try:
-                    for t in transcript_list:
-                        transcript = t.translate('en') if t.language_code != 'en' else t
+                # Try auto-generated English
+                transcript_list = ytt.list(video_id)
+                for t in transcript_list:
+                    if t.language_code == 'en':
+                        raw = t.fetch()
                         break
-                except Exception:
-                    pass
+                if raw is None:
+                    # Take first available and translate
+                    for t in transcript_list:
+                        raw = t.translate('en').fetch()
+                        break
+            except Exception:
+                pass
 
-        if transcript:
-            raw = transcript.fetch()
-            chunks = _chunk_transcript(raw)
-            duration = int(raw[-1]['start'] + raw[-1].get('duration', 0)) if raw else 0
+        if raw is not None:
+            entries = [{"start": s.start, "duration": s.duration, "text": s.text} for s in raw]
+            chunks = _chunk_transcript(entries)
+            duration = int(entries[-1]['start'] + entries[-1].get('duration', 0)) if entries else 0
             return {
                 "title": title,
                 "duration": duration,
