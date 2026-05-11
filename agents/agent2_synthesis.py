@@ -1,11 +1,15 @@
 import asyncio
 import json
 import os
-from groq import AsyncGroq
+from openai import AsyncOpenAI
 from typing import List, Dict
 
-client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
-MODEL = "llama-3.3-70b-versatile"
+client = AsyncOpenAI(
+    api_key=os.getenv("NVIDIA_API_KEY"),
+    base_url="https://integrate.api.nvidia.com/v1",
+)
+MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+
 
 def chunks_to_text(chunks: List[Dict], max_chars: int = 12000) -> str:
     text = ""
@@ -60,7 +64,7 @@ async def generate_summaries(chunks: List[Dict], title: str) -> Dict:
             model=MODEL,
             max_tokens=250,
             messages=[
-                {"role": "system", "content": "You are an expert tutor. Write a 90-second summary about 150 words of this lecture. Plain language, no jargon. Just the single most important insight. Return only the summary text."},
+                {"role": "system", "content": "You are an expert tutor. Write a 90-second summary of about 150 words of this lecture. Plain language, no jargon. Just the single most important insight. Return only the summary text."},
                 {"role": "user", "content": f"Title: {title}\n\nTranscript:\n{transcript}"}
             ]
         )
@@ -71,7 +75,7 @@ async def generate_summaries(chunks: List[Dict], title: str) -> Dict:
             model=MODEL,
             max_tokens=700,
             messages=[
-                {"role": "system", "content": "You are an expert tutor. Write a 5-minute summary about 500 words of this lecture. Cover all major concepts in order. Clear and accessible. Return only the summary text."},
+                {"role": "system", "content": "You are an expert tutor. Write a 5-minute summary of about 500 words of this lecture. Cover all major concepts in order. Clear and accessible. Return only the summary text."},
                 {"role": "user", "content": f"Title: {title}\n\nTranscript:\n{transcript}"}
             ]
         )
