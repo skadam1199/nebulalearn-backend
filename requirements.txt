@@ -6,3 +6,4 @@ python-dotenv==1.2.2
 httpx==0.28.1
 numpy==2.4.4
 youtube-transcript-api==1.2.4
+supadata
