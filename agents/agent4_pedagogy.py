@@ -1,10 +1,13 @@
 import json
 import os
-from groq import AsyncGroq
+from openai import AsyncOpenAI
 from typing import List, Dict
 
-client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
-MODEL = "llama-3.3-70b-versatile"
+client = AsyncOpenAI(
+    api_key=os.getenv("NVIDIA_API_KEY"),
+    base_url="https://integrate.api.nvidia.com/v1",
+)
+MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5"
 
 
 async def run_pedagogy_audit(chunks: List[Dict], title: str) -> Dict:
